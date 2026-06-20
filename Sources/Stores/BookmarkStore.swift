@@ -10,10 +10,17 @@ final class BookmarkStore {
     private let fileURL: URL
     private var ids: Set<Int> = []
 
-    init(filename: String = "bookmarks.json") {
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        fileURL = dir.appendingPathComponent(filename)
+    init(filename: String = "bookmarks.json", directory: URL? = nil, fileURL: URL? = nil) {
+        let base = directory ?? FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        let resolved = fileURL ?? base.appendingPathComponent(filename)
+        try? FileManager.default.createDirectory(
+            at: resolved.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        self.fileURL = resolved
         load()
     }
 

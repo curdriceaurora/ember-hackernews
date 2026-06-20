@@ -73,6 +73,28 @@ targets:
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: "YES"
         MACOSX_DEPLOYMENT_TARGET: "15.0"
 
+  EmberUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: Tests/EmberUITests
+    dependencies:
+      - target: Ember
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.datanoise.ember.ui-tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        CODE_SIGNING_ALLOWED: "YES"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: "Apple Development"
+        CODE_SIGN_STYLE: Manual
+        DEVELOPMENT_TEAM: G2S3H982C7
+        SUPPORTS_MACCATALYST: "YES"
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: "NO"
+        DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: "YES"
+        MACOSX_DEPLOYMENT_TARGET: "15.0"
+
 schemes:
   Ember:
     build:

@@ -6,10 +6,10 @@ struct DesktopFeedColumn: View {
     @Binding var selection: HNItem?
     @State private var vm: FeedViewModel
 
-    init(feed: Feed, selection: Binding<HNItem?>) {
+    init(feed: Feed, selection: Binding<HNItem?>, service: any HNServicing) {
         self.feed = feed
         _selection = selection
-        _vm = State(initialValue: FeedViewModel(feed: feed))
+        _vm = State(initialValue: FeedViewModel(feed: feed, service: service))
     }
 
     var body: some View {
@@ -20,19 +20,40 @@ struct DesktopFeedColumn: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .failed(let message) where vm.stories.isEmpty:
                 ErrorStateView(message: message) { Task { await vm.reload() } }
+            case .loaded where vm.stories.isEmpty:
+                EmptyStateView(
+                    systemImage: "newspaper",
+                    title: "No stories",
+                    message: "There are no stories in this feed right now."
+                )
             default:
                 list
             }
         }
         .navigationTitle(feed.title)
         .background(Theme.background)
-        .task { await vm.startIfNeeded() }
+        .task {
+            await vm.startIfNeeded()
+            #if DEBUG
+            if LaunchArgs.autoOpenFirst, selection == nil {
+                selection = vm.stories.first
+            }
+            #endif
+        }
     }
 
     private var list: some View {
         List(selection: $selection) {
             ForEach(Array(vm.stories.enumerated()), id: \.element.id) { index, story in
-                StoryRow(item: story, rank: index + 1)
+                Button {
+                    selection = story
+                } label: {
+                    StoryRow(item: story, rank: index + 1)
+                }
+                    .buttonStyle(.plain)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityIdentifier("desktop.story.row.\(story.id)")
+                    .accessibilityLabel(story.displayTitle)
                     .tag(story)
                     .listRowSeparatorTint(Theme.separator)
                     .task {
@@ -68,7 +89,15 @@ struct DesktopSavedColumn: View {
             } else {
                 List(selection: $selection) {
                     ForEach(bookmarks.items) { story in
-                        StoryRow(item: story)
+                        Button {
+                            selection = story
+                        } label: {
+                            StoryRow(item: story)
+                        }
+                            .buttonStyle(.plain)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityIdentifier("desktop.story.row.\(story.id)")
+                            .accessibilityLabel(story.displayTitle)
                             .tag(story)
                             .listRowSeparatorTint(Theme.separator)
                             .swipeActions {
@@ -92,8 +121,13 @@ struct DesktopSavedColumn: View {
 
 /// Search for the desktop middle column.
 struct DesktopSearchColumn: View {
-    @State private var vm = SearchViewModel()
+    @State private var vm: SearchViewModel
     @Binding var selection: HNItem?
+
+    init(selection: Binding<HNItem?>, service: any HNServicing) {
+        _selection = selection
+        _vm = State(initialValue: SearchViewModel(service: service))
+    }
 
     private var searchKey: String { "\(vm.query)|\(vm.mode.rawValue)" }
 
@@ -115,7 +149,15 @@ struct DesktopSearchColumn: View {
             case .results:
                 List(selection: $selection) {
                     ForEach(vm.results) { story in
-                        StoryRow(item: story)
+                        Button {
+                            selection = story
+                        } label: {
+                            StoryRow(item: story)
+                        }
+                            .buttonStyle(.plain)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityIdentifier("desktop.story.row.\(story.id)")
+                            .accessibilityLabel(story.displayTitle)
                             .tag(story)
                             .listRowSeparatorTint(Theme.separator)
                     }

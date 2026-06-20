@@ -7,15 +7,20 @@ actor DiskCache {
     static let shared = DiskCache()
 
     private let directory: URL
-    private let fileManager = FileManager.default
+    private let fileManager: FileManager
     private let maxFiles: Int
     private var storesSincePrune = 0
 
-    init(maxFiles: Int = 1_500) {
+    init(
+        maxFiles: Int = 1_500,
+        directory: URL? = nil,
+        fileManager: FileManager = .default
+    ) {
         self.maxFiles = maxFiles
+        self.fileManager = fileManager
         let caches = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        directory = caches.appendingPathComponent("HNContentCache", isDirectory: true)
-        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        self.directory = directory ?? caches.appendingPathComponent("HNContentCache", isDirectory: true)
+        try? fileManager.createDirectory(at: self.directory, withIntermediateDirectories: true)
     }
 
     private func url(for key: String) -> URL {

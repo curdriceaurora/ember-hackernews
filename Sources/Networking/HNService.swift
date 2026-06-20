@@ -38,17 +38,21 @@ final class LiveHNService: HNServicing {
     private let firebaseBase = "https://hacker-news.firebaseio.com/v0"
     private let algoliaBase = "https://hn.algolia.com/api/v1"
     private let session: URLSession
-    private let cache = DiskCache.shared
+    private let cache: DiskCache
 
-    init() {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 15
-        config.timeoutIntervalForResource = 30
-        config.urlCache = URLCache(memoryCapacity: 16 << 20, diskCapacity: 64 << 20)
-        config.requestCachePolicy = .reloadRevalidatingCacheData
-        // Fail fast when offline so we can fall back to the disk cache promptly.
-        config.waitsForConnectivity = false
-        session = URLSession(configuration: config)
+    init(session: URLSession? = nil, cache: DiskCache = .shared) {
+        if let session {
+            self.session = session
+        } else {
+            let config = URLSessionConfiguration.default
+            config.timeoutIntervalForRequest = 15
+            config.timeoutIntervalForResource = 30
+            config.urlCache = URLCache(memoryCapacity: 16 << 20, diskCapacity: 64 << 20)
+            config.requestCachePolicy = .reloadRevalidatingCacheData
+            config.waitsForConnectivity = false
+            self.session = URLSession(configuration: config)
+        }
+        self.cache = cache
     }
 
     private var firebaseDecoder: JSONDecoder { JSONDecoder() }

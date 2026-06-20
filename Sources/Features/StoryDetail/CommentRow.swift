@@ -40,6 +40,7 @@ struct CommentRow: View {
         .padding(.horizontal, Spacing.l)
         .contentShape(Rectangle())
         .background(Theme.background)
+        .accessibilityIdentifier("comment.row.\(comment.id)")
     }
 
     private var header: some View {
@@ -82,6 +83,7 @@ struct CommentRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("comment.toggle.\(comment.id)")
             .accessibilityLabel(isCollapsed
                 ? "Expand thread, \(comment.descendantCount) replies hidden"
                 : "Collapse thread")

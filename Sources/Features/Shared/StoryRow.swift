@@ -73,6 +73,7 @@ struct StoryRow: View {
         .contentShape(Rectangle())
         .opacity(isRead ? 0.82 : 1)
         .accessibilityElement(children: .ignore)
+        .accessibilityIdentifier("story.row.\(item.id)")
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint("Opens the discussion")
         .accessibilityAddTraits(.isButton)

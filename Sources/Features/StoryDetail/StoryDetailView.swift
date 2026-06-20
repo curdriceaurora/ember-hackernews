@@ -12,9 +12,9 @@ struct StoryDetailView: View {
     @Environment(\.openArticle) private var openArticle
     @Environment(\.openURL) private var openURL
 
-    init(item: HNItem) {
+    init(item: HNItem, service: any HNServicing = LiveHNService.shared) {
         self.item = item
-        _vm = State(initialValue: StoryDetailViewModel(item: item))
+        _vm = State(initialValue: StoryDetailViewModel(item: item, service: service))
     }
 
     private var story: HNItem { vm.resolvedItem }
@@ -172,6 +172,7 @@ struct StoryDetailView: View {
                             .labelStyle(.titleAndIcon)
                     }
                     .foregroundStyle(settings.accent.color)
+                    .accessibilityIdentifier("comments.collapseAll")
                 }
             }
             .padding(.horizontal, Spacing.l)
@@ -239,6 +240,7 @@ struct StoryDetailView: View {
                 Image(systemName: bookmarks.isBookmarked(story) ? "bookmark.fill" : "bookmark")
             }
             .accessibilityLabel(bookmarks.isBookmarked(story) ? "Remove from saved" : "Save story")
+            .accessibilityIdentifier("story.bookmark")
         }
         ToolbarItem(placement: .topBarTrailing) {
             Menu {

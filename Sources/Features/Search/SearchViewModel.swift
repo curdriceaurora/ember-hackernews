@@ -9,7 +9,7 @@ final class SearchViewModel {
     private(set) var results: [HNItem] = []
     private(set) var phase: SearchPhase = .idle
 
-    private let service: HNServicing
+    let service: any HNServicing
 
     enum SearchPhase: Equatable {
         case idle, searching, results, empty, failed(String)

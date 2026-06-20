@@ -18,5 +18,13 @@ enum LaunchArgs {
     static var onboardingStep: Int? { value("-uiOnboardingStep").flatMap(Int.init) }
     /// Simulates being offline so the disk-cache fallback can be exercised.
     static var forceOffline: Bool { flag("-uiForceOffline") }
+    static var uiTesting: Bool { flag("-uiTesting") }
+    static var uiScenario: MockHNService.Scenario {
+        MockHNService.Scenario(rawValue: value("-uiScenario") ?? "") ?? .standard
+    }
+    static var uiStateNamespace: String? { value("-uiStateNamespace") }
+    static var uiPreserveState: Bool { flag("-uiPreserveState") }
+    static var uiSkipOnboarding: Bool { flag("-uiSkipOnboarding") }
+    static var uiOpenSettings: Bool { flag("-uiOpenSettings") }
 }
 #endif

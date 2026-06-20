@@ -2,11 +2,15 @@ import SwiftUI
 
 /// The primary feeds screen: a pinned feed selector over a paginated story list.
 struct FeedView: View {
-    @State private var vm = FeedViewModel()
+    @State private var vm: FeedViewModel
     @State private var path = NavigationPath()
 
     @Environment(SettingsStore.self) private var settings
     @Environment(BookmarkStore.self) private var bookmarks
+
+    init(service: any HNServicing = LiveHNService.shared) {
+        _vm = State(initialValue: FeedViewModel(service: service))
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -33,8 +37,12 @@ struct FeedView: View {
                         Task { await vm.switchTo(feed) }
                     }
                 }
-                .navigationDestination(for: HNItem.self) { StoryDetailView(item: $0) }
-                .navigationDestination(for: UserRoute.self) { UserView(username: $0.username) }
+                .navigationDestination(for: HNItem.self) {
+                    StoryDetailView(item: $0, service: vm.service)
+                }
+                .navigationDestination(for: UserRoute.self) {
+                    UserView(username: $0.username, service: vm.service)
+                }
         }
         .task {
             await vm.startIfNeeded()
@@ -54,6 +62,16 @@ struct FeedView: View {
         case .failed(let message) where vm.stories.isEmpty:
             ScrollView {
                 ErrorStateView(message: message) { Task { await vm.reload() } }
+            }
+            .background(Theme.background)
+            .refreshable { await vm.reload() }
+        case .loaded where vm.stories.isEmpty:
+            ScrollView {
+                EmptyStateView(
+                    systemImage: "newspaper",
+                    title: "No stories",
+                    message: "There are no stories in this feed right now."
+                )
             }
             .background(Theme.background)
             .refreshable { await vm.reload() }
