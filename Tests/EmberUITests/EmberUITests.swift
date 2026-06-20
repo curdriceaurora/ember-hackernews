@@ -116,8 +116,17 @@ final class EmberUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["state.empty"].waitForExistence(timeout: 5))
 
         app.tabBars.buttons["Settings"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["settings.form"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["settings.personalize"].exists)
+        let form = app.descendants(matching: .any)["settings.form"].firstMatch
+        XCTAssertTrue(form.waitForExistence(timeout: 5))
+        // "Personalize" is below the fold on iPhone, so scroll it into the
+        // accessibility hierarchy before asserting it exists.
+        let personalize = app.buttons["settings.personalize"]
+        var scrolls = 0
+        while !personalize.exists && scrolls < 5 {
+            form.swipeUp()
+            scrolls += 1
+        }
+        XCTAssertTrue(personalize.exists)
     }
     #else
     func testCatalystSidebarSearchSavedAndSettings() {
