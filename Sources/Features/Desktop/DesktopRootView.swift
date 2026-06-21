@@ -34,7 +34,9 @@ struct DesktopRootView: View {
             detailColumn
         }
         .navigationSplitViewStyle(.balanced)
+        #if targetEnvironment(macCatalyst)
         .frame(minWidth: 920, minHeight: 600)
+        #endif
         .sheet(isPresented: $showSettings) {
             SettingsView(cache: cache)
                 .frame(minWidth: 440, minHeight: 620)
