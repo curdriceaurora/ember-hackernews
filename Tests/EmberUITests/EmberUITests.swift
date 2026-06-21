@@ -22,6 +22,7 @@ final class EmberUITests: XCTestCase {
         skipOnboarding: Bool = true,
         preserveState: Bool = false,
         query: String? = nil,
+        initialTab: String? = nil,
         autoOpenFirst: Bool = false,
         openSettings: Bool = false
     ) {
@@ -39,6 +40,9 @@ final class EmberUITests: XCTestCase {
         }
         if let query {
             app.launchArguments += ["-uiQuery", query]
+        }
+        if let initialTab {
+            app.launchArguments += ["-uiTab", initialTab]
         }
         if autoOpenFirst {
             app.launchArguments.append("-uiAutoOpenFirst")
@@ -140,8 +144,12 @@ final class EmberUITests: XCTestCase {
 
     #if !targetEnvironment(macCatalyst)
     func testIOSNavigationSearchAndSettings() {
-        launch(query: "Swift")
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            assertSidebarSearchSavedAndSettings()
+            return
+        }
 
+        launch(query: "Swift")
         app.tabBars.buttons["Search"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["story.row.1"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.segmentedControls["search.sort"].exists)
@@ -161,6 +169,21 @@ final class EmberUITests: XCTestCase {
             scrolls += 1
         }
         XCTAssertTrue(personalize.exists)
+    }
+
+    private func assertSidebarSearchSavedAndSettings() {
+        launch(initialTab: "search")
+        XCTAssertTrue(app.navigationBars["Search"].waitForExistence(timeout: 5))
+
+        app.terminate()
+        namespace = UUID().uuidString
+        launch(initialTab: "saved")
+        XCTAssertTrue(app.staticTexts["Nothing saved"].waitForExistence(timeout: 5))
+
+        app.terminate()
+        namespace = UUID().uuidString
+        launch(openSettings: true)
+        XCTAssertTrue(app.descendants(matching: .any)["settings.form"].waitForExistence(timeout: 5))
     }
     #else
     func testCatalystSidebarSearchSavedAndSettings() {
