@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SavedView: View {
+    let service: any HNServicing
     @Environment(BookmarkStore.self) private var bookmarks
     @State private var path = NavigationPath()
 
@@ -36,8 +37,12 @@ struct SavedView: View {
                     }
                 }
             }
-            .navigationDestination(for: HNItem.self) { StoryDetailView(item: $0) }
-            .navigationDestination(for: UserRoute.self) { UserView(username: $0.username) }
+            .navigationDestination(for: HNItem.self) {
+                StoryDetailView(item: $0, service: service)
+            }
+            .navigationDestination(for: UserRoute.self) {
+                UserView(username: $0.username, service: service)
+            }
         }
     }
 

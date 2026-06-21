@@ -109,6 +109,7 @@ struct ErrorStateView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("state.error")
     }
 }
 
@@ -135,5 +136,6 @@ struct EmptyStateView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 70)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("state.empty")
     }
 }

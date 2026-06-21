@@ -7,6 +7,9 @@ struct FaviconView: View {
     var size: CGFloat = 20
 
     private var iconURL: URL? {
+        #if DEBUG
+        if LaunchArgs.uiTesting { return nil }
+        #endif
         guard let host else { return nil }
         return URL(string: "https://icons.duckduckgo.com/ip3/\(host).ico")
     }

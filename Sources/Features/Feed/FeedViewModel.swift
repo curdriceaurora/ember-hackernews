@@ -22,7 +22,7 @@ final class FeedViewModel {
     private var allIDs: [Int] = []
     private var nextIndex = 0
     private let pageSize = 20
-    private let service: HNServicing
+    let service: any HNServicing
 
     init(feed: Feed = .top, service: HNServicing = LiveHNService.shared) {
         self.feed = feed

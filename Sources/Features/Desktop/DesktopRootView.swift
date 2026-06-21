@@ -4,6 +4,9 @@ import SwiftUI
 /// library), a story list, and the discussion detail. Reuses the same rows,
 /// detail view, and view models as the iPhone layout.
 struct DesktopRootView: View {
+    let service: any HNServicing
+    let cache: DiskCache
+
     @Environment(SettingsStore.self) private var settings
     @Environment(ReadStore.self) private var readStore
     @Environment(BookmarkStore.self) private var bookmarks
@@ -33,7 +36,7 @@ struct DesktopRootView: View {
         .navigationSplitViewStyle(.balanced)
         .frame(minWidth: 920, minHeight: 600)
         .sheet(isPresented: $showSettings) {
-            SettingsView()
+            SettingsView(cache: cache)
                 .frame(minWidth: 440, minHeight: 620)
                 .environment(settings)
                 .environment(readStore)
@@ -49,6 +52,9 @@ struct DesktopRootView: View {
             case "saved": section = .saved
             default: break
             }
+            if LaunchArgs.uiOpenSettings {
+                showSettings = true
+            }
             #endif
         }
     }
@@ -61,13 +67,16 @@ struct DesktopRootView: View {
                 ForEach(Feed.allCases) { feed in
                     Label(feed.title, systemImage: feed.systemImage)
                         .tag(DesktopSection.feed(feed))
+                        .accessibilityIdentifier("sidebar.feed.\(feed.rawValue)")
                 }
             }
             Section("Library") {
                 Label("Search", systemImage: "magnifyingglass")
                     .tag(DesktopSection.search)
+                    .accessibilityIdentifier("sidebar.search")
                 Label("Saved", systemImage: "bookmark")
                     .tag(DesktopSection.saved)
+                    .accessibilityIdentifier("sidebar.saved")
             }
         }
         .navigationTitle("Ember")
@@ -81,6 +90,7 @@ struct DesktopRootView: View {
                 }
                 .help("Settings")
                 .accessibilityLabel("Settings")
+                .accessibilityIdentifier("settings.open")
             }
         }
     }
@@ -91,14 +101,14 @@ struct DesktopRootView: View {
         Group {
             switch section {
             case .feed(let feed):
-                DesktopFeedColumn(feed: feed, selection: $selectedStory)
+                DesktopFeedColumn(feed: feed, selection: $selectedStory, service: service)
                     .id(feed)
             case .search:
-                DesktopSearchColumn(selection: $selectedStory)
+                DesktopSearchColumn(selection: $selectedStory, service: service)
             case .saved:
                 DesktopSavedColumn(selection: $selectedStory)
             case .none:
-                DesktopFeedColumn(feed: .top, selection: $selectedStory)
+                DesktopFeedColumn(feed: .top, selection: $selectedStory, service: service)
             }
         }
         .navigationSplitViewColumnWidth(min: 320, ideal: 380, max: 520)
@@ -109,9 +119,13 @@ struct DesktopRootView: View {
     @ViewBuilder private var detailColumn: some View {
         if let story = selectedStory {
             NavigationStack {
-                StoryDetailView(item: story)
-                    .navigationDestination(for: UserRoute.self) { UserView(username: $0.username) }
-                    .navigationDestination(for: HNItem.self) { StoryDetailView(item: $0) }
+                StoryDetailView(item: story, service: service)
+                    .navigationDestination(for: UserRoute.self) {
+                        UserView(username: $0.username, service: service)
+                    }
+                    .navigationDestination(for: HNItem.self) {
+                        StoryDetailView(item: $0, service: service)
+                    }
             }
             .id(story.id)
         } else {

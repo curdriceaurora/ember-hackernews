@@ -4,6 +4,9 @@ import SwiftUI
 /// and a tab bar on iPhone. Shared app chrome (accent, color scheme, link
 /// handling, in-app browser, onboarding) is applied once here for both.
 struct RootView: View {
+    let service: any HNServicing
+    let cache: DiskCache
+
     @Environment(SettingsStore.self) private var settings
     @Environment(LinkOpener.self) private var linkOpener
     @Environment(\.openURL) private var systemOpenURL
@@ -14,9 +17,9 @@ struct RootView: View {
 
         Group {
             if sizeClass == .compact {
-                MobileRootView()
+                MobileRootView(service: service, cache: cache)
             } else {
-                DesktopRootView()
+                DesktopRootView(service: service, cache: cache)
             }
         }
         .tint(settings.accent.color)
@@ -61,22 +64,24 @@ struct RootView: View {
 
 /// iPhone layout: a tab bar with an independent navigation stack per tab.
 struct MobileRootView: View {
+    let service: any HNServicing
+    let cache: DiskCache
     @State private var selectedTab: Tab = .stories
 
     enum Tab: Hashable { case stories, search, saved, settings }
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            FeedView()
+            FeedView(service: service)
                 .tabItem { Label("Stories", systemImage: "flame.fill") }
                 .tag(Tab.stories)
-            SearchView()
+            SearchView(service: service)
                 .tabItem { Label("Search", systemImage: "magnifyingglass") }
                 .tag(Tab.search)
-            SavedView()
+            SavedView(service: service)
                 .tabItem { Label("Saved", systemImage: "bookmark.fill") }
                 .tag(Tab.saved)
-            SettingsView()
+            SettingsView(cache: cache)
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
                 .tag(Tab.settings)
         }

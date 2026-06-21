@@ -5,9 +5,9 @@ struct UserView: View {
     @State private var vm: UserViewModel
     @Environment(\.openURL) private var openURL
 
-    init(username: String) {
+    init(username: String, service: any HNServicing = LiveHNService.shared) {
         self.username = username
-        _vm = State(initialValue: UserViewModel(username: username))
+        _vm = State(initialValue: UserViewModel(username: username, service: service))
     }
 
     var body: some View {

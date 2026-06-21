@@ -1,20 +1,29 @@
 import SwiftUI
 
 struct SearchView: View {
-    @State private var vm = SearchViewModel()
+    @State private var vm: SearchViewModel
     @State private var path = NavigationPath()
 
     private let suggestions = ["Swift", "AI", "Rust", "Startups", "Security", "Apple", "Postgres"]
+
+    init(service: any HNServicing = LiveHNService.shared) {
+        _vm = State(initialValue: SearchViewModel(service: service))
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
             content
                 .navigationTitle("Search")
-                .navigationDestination(for: HNItem.self) { StoryDetailView(item: $0) }
-                .navigationDestination(for: UserRoute.self) { UserView(username: $0.username) }
+                .navigationDestination(for: HNItem.self) {
+                    StoryDetailView(item: $0, service: vm.service)
+                }
+                .navigationDestination(for: UserRoute.self) {
+                    UserView(username: $0.username, service: vm.service)
+                }
         }
         .searchable(text: $vm.query, placement: .navigationBarDrawer(displayMode: .always),
                     prompt: "Search stories and discussions")
+        .accessibilityIdentifier("search.field")
         .task(id: searchKey) {
             try? await Task.sleep(for: .milliseconds(320))
             guard !Task.isCancelled else { return }
@@ -79,6 +88,7 @@ struct SearchView: View {
             }
         }
         .pickerStyle(.segmented)
+        .accessibilityIdentifier("search.sort")
         .textCase(nil)
         .padding(.vertical, Spacing.xs)
         .listRowInsets(EdgeInsets(top: Spacing.s, leading: Spacing.l, bottom: Spacing.s, trailing: Spacing.l))

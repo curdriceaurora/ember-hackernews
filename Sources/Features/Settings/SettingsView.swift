@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+    let cache: DiskCache
     @Environment(SettingsStore.self) private var settings
     @Environment(ReadStore.self) private var readStore
     @Environment(BookmarkStore.self) private var bookmarks
@@ -25,7 +26,8 @@ struct SettingsView: View {
             .tint(settings.accent.color)
             .labelStyle(SettingsLabelStyle())
             .environment(\.defaultMinListRowHeight, 46)
-            .task { cacheSize = await DiskCache.shared.sizeInBytes() }
+            .accessibilityIdentifier("settings.form")
+            .task { cacheSize = await cache.sizeInBytes() }
         }
     }
 
@@ -108,6 +110,7 @@ struct SettingsView: View {
             } label: {
                 Label("Personalize Again", systemImage: "wand.and.stars")
             }
+            .accessibilityIdentifier("settings.personalize")
         } footer: {
             Text("Re-run the quick setup to retune the app to your preferences.")
         }
@@ -146,7 +149,7 @@ struct SettingsView: View {
             }
             Button(role: .destructive) {
                 Task {
-                    await DiskCache.shared.clear()
+                    await cache.clear()
                     cacheSize = 0
                     Haptics.warning()
                 }

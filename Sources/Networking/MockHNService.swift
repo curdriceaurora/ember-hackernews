@@ -2,6 +2,18 @@ import Foundation
 
 /// In-memory service for SwiftUI previews and tests. No network.
 struct MockHNService: HNServicing {
+    enum Scenario: String, CaseIterable {
+        case standard
+        case emptyFeed
+        case feedFailure
+        case searchEmpty
+        case searchFailure
+        case emptyComments
+        case detailFailure
+    }
+
+    var scenario: Scenario = .standard
+
     static let sampleStories: [HNItem] = [
         HNItem(id: 1, type: "story", by: "pg", time: nowOffset(-3600),
                kids: [101, 102], url: "https://paulgraham.com/greatwork.html",
@@ -36,7 +48,9 @@ struct MockHNService: HNServicing {
     }
 
     func storyIDs(for feed: Feed) async throws -> [Int] {
-        Self.sampleStories.map(\.id)
+        if scenario == .feedFailure { throw HNError.transport(URLError(.notConnectedToInternet)) }
+        if scenario == .emptyFeed { return [] }
+        return Self.sampleStories.map(\.id)
     }
     func item(_ id: Int) async throws -> HNItem {
         Self.sampleStories.first { $0.id == id } ?? Self.sampleStories[0]
@@ -47,7 +61,16 @@ struct MockHNService: HNServicing {
     func user(_ id: String) async throws -> HNUser { Self.sampleUser }
 
     func commentTree(for id: Int) async throws -> AlgoliaItem {
-        AlgoliaItem(
+        if scenario == .detailFailure { throw HNError.notFound }
+        if scenario == .emptyComments {
+            return AlgoliaItem(
+                id: id, createdAtI: Self.nowOffset(-3600), type: "story",
+                author: "pg", title: "How to Do Great Work",
+                url: "https://paulgraham.com/greatwork.html", points: 842,
+                children: []
+            )
+        }
+        return AlgoliaItem(
             id: id, createdAtI: Self.nowOffset(-3600), type: "story",
             author: "pg", title: "How to Do Great Work",
             url: "https://paulgraham.com/greatwork.html", text: nil, points: 842,
@@ -72,7 +95,9 @@ struct MockHNService: HNServicing {
     }
 
     func search(_ query: String, mode: SearchMode, page: Int) async throws -> [SearchHit] {
-        Self.sampleStories.map {
+        if scenario == .searchFailure { throw HNError.transport(URLError(.notConnectedToInternet)) }
+        if scenario == .searchEmpty { return [] }
+        return Self.sampleStories.map {
             SearchHit(objectID: String($0.id), title: $0.title, url: $0.url,
                       author: $0.by, points: $0.score, numComments: $0.descendants,
                       createdAtI: $0.time, storyText: $0.text)

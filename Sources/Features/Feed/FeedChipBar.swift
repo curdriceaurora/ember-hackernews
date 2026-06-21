@@ -55,6 +55,7 @@ struct FeedChipBar: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("feed.selector.\(feed.rawValue)")
         .accessibilityLabel(feed.title)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }

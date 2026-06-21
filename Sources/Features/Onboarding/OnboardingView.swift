@@ -66,6 +66,7 @@ struct OnboardingView: View {
             }
         }
         .accessibilityElement()
+        .accessibilityIdentifier("onboarding.progress")
         .accessibilityLabel("Step \(step + 1) of \(lastStep + 1)")
     }
 
@@ -346,6 +347,7 @@ struct OnboardingView: View {
                         .clipShape(RoundedRectangle(cornerRadius: Radius.m, style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("onboarding.back")
                 .frame(width: 110)
             }
 
@@ -361,6 +363,7 @@ struct OnboardingView: View {
                     .clipShape(RoundedRectangle(cornerRadius: Radius.m, style: .continuous))
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("onboarding.next")
         }
     }
 

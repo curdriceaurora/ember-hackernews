@@ -9,12 +9,6 @@
   ],
   "defaultOptions" : {
     "codeCoverage" : false,
-    "commandLineArgumentEntries" : [
-      {
-        "argument" : "-uiForceOffline",
-        "enabled" : true
-      }
-    ],
     "targetForVariableExpansion" : {
       "containerPath" : "container:Ember.xcodeproj",
       "identifier" : "3E853DD93E303CC86CD1FA7F",
@@ -27,6 +21,13 @@
         "containerPath" : "container:Ember.xcodeproj",
         "identifier" : "9CB026868D8E745BE7705048",
         "name" : "EmberTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Ember.xcodeproj",
+        "identifier" : "DDDACFB53C0138E75AAB93EA",
+        "name" : "EmberUITests"
       }
     }
   ],
