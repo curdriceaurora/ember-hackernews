@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 final class EmberUITests: XCTestCase {
     private var app: XCUIApplication!
@@ -21,6 +22,7 @@ final class EmberUITests: XCTestCase {
         skipOnboarding: Bool = true,
         preserveState: Bool = false,
         query: String? = nil,
+        initialTab: String? = nil,
         autoOpenFirst: Bool = false,
         openSettings: Bool = false
     ) {
@@ -39,6 +41,9 @@ final class EmberUITests: XCTestCase {
         if let query {
             app.launchArguments += ["-uiQuery", query]
         }
+        if let initialTab {
+            app.launchArguments += ["-uiTab", initialTab]
+        }
         if autoOpenFirst {
             app.launchArguments.append("-uiAutoOpenFirst")
         }
@@ -52,31 +57,46 @@ final class EmberUITests: XCTestCase {
         launch(skipOnboarding: false)
         let progress = app.descendants(matching: .any)["onboarding.progress"].firstMatch
         XCTAssertTrue(progress.waitForExistence(timeout: 5))
-        #if targetEnvironment(macCatalyst)
-        XCTAssertEqual(progress.label, "Step 1 of 6")
-        app.terminate()
-        launch(preserveState: true)
-        XCTAssertTrue(app.descendants(matching: .any)["story.row.1"].waitForExistence(timeout: 5))
-        #else
+
         for step in 1...6 {
             XCTAssertEqual(progress.label, "Step \(step) of 6")
-            let next = app.buttons["onboarding.next"]
-            XCTAssertTrue(next.waitForExistence(timeout: 5))
-            next.tap()
+            advanceOnboarding()
             if step < 6 {
                 let advanced = NSPredicate(format: "label == %@", "Step \(step + 1) of 6")
                 expectation(for: advanced, evaluatedWith: progress)
                 waitForExpectations(timeout: 5)
             }
         }
-        XCTAssertTrue(app.descendants(matching: .any)["story.row.1"].waitForExistence(timeout: 5))
+        XCTAssertTrue(firstStoryRow.waitForExistence(timeout: 5))
 
         app.terminate()
         launch(skipOnboarding: false, preserveState: true)
 
-        XCTAssertFalse(app.otherElements["onboarding.progress"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.descendants(matching: .any)["story.row.1"].waitForExistence(timeout: 5))
+        let relaunchedProgress = app.descendants(matching: .any)["onboarding.progress"].firstMatch
+        XCTAssertTrue(relaunchedProgress.waitForNonExistence(timeout: 2))
+        XCTAssertTrue(firstStoryRow.waitForExistence(timeout: 5))
+    }
+
+    private func advanceOnboarding() {
+        let next = app.buttons["onboarding.next"].firstMatch
+        XCTAssertTrue(next.waitForExistence(timeout: 5))
+        #if targetEnvironment(macCatalyst)
+        app.activate()
+        next.click()
+        #else
+        next.tap()
         #endif
+    }
+
+    private var firstStoryRow: XCUIElement {
+        #if targetEnvironment(macCatalyst)
+        let identifier = "desktop.story.row.1"
+        #else
+        let identifier = UIDevice.current.userInterfaceIdiom == .pad
+            ? "desktop.story.row.1"
+            : "story.row.1"
+        #endif
+        return app.descendants(matching: .any)[identifier].firstMatch
     }
 
     func testStandardFeedDetailBookmarkAndComments() {
@@ -124,8 +144,12 @@ final class EmberUITests: XCTestCase {
 
     #if !targetEnvironment(macCatalyst)
     func testIOSNavigationSearchAndSettings() {
-        launch(query: "Swift")
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            assertSidebarSearchSavedAndSettings()
+            return
+        }
 
+        launch(query: "Swift")
         app.tabBars.buttons["Search"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["story.row.1"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.segmentedControls["search.sort"].exists)
@@ -145,6 +169,21 @@ final class EmberUITests: XCTestCase {
             scrolls += 1
         }
         XCTAssertTrue(personalize.exists)
+    }
+
+    private func assertSidebarSearchSavedAndSettings() {
+        launch(initialTab: "search")
+        XCTAssertTrue(app.navigationBars["Search"].waitForExistence(timeout: 5))
+
+        app.terminate()
+        namespace = UUID().uuidString
+        launch(initialTab: "saved")
+        XCTAssertTrue(app.staticTexts["Nothing saved"].waitForExistence(timeout: 5))
+
+        app.terminate()
+        namespace = UUID().uuidString
+        launch(openSettings: true)
+        XCTAssertTrue(app.descendants(matching: .any)["settings.form"].waitForExistence(timeout: 5))
     }
     #else
     func testCatalystSidebarSearchSavedAndSettings() {
