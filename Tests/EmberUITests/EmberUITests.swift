@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 final class EmberUITests: XCTestCase {
     private var app: XCUIApplication!
@@ -52,31 +53,46 @@ final class EmberUITests: XCTestCase {
         launch(skipOnboarding: false)
         let progress = app.descendants(matching: .any)["onboarding.progress"].firstMatch
         XCTAssertTrue(progress.waitForExistence(timeout: 5))
-        #if targetEnvironment(macCatalyst)
-        XCTAssertEqual(progress.label, "Step 1 of 6")
-        app.terminate()
-        launch(preserveState: true)
-        XCTAssertTrue(app.descendants(matching: .any)["story.row.1"].waitForExistence(timeout: 5))
-        #else
+
         for step in 1...6 {
             XCTAssertEqual(progress.label, "Step \(step) of 6")
-            let next = app.buttons["onboarding.next"]
-            XCTAssertTrue(next.waitForExistence(timeout: 5))
-            next.tap()
+            advanceOnboarding()
             if step < 6 {
                 let advanced = NSPredicate(format: "label == %@", "Step \(step + 1) of 6")
                 expectation(for: advanced, evaluatedWith: progress)
                 waitForExpectations(timeout: 5)
             }
         }
-        XCTAssertTrue(app.descendants(matching: .any)["story.row.1"].waitForExistence(timeout: 5))
+        XCTAssertTrue(firstStoryRow.waitForExistence(timeout: 5))
 
         app.terminate()
         launch(skipOnboarding: false, preserveState: true)
 
-        XCTAssertFalse(app.otherElements["onboarding.progress"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.descendants(matching: .any)["story.row.1"].waitForExistence(timeout: 5))
+        let relaunchedProgress = app.descendants(matching: .any)["onboarding.progress"].firstMatch
+        XCTAssertTrue(relaunchedProgress.waitForNonExistence(timeout: 2))
+        XCTAssertTrue(firstStoryRow.waitForExistence(timeout: 5))
+    }
+
+    private func advanceOnboarding() {
+        let next = app.buttons["onboarding.next"].firstMatch
+        XCTAssertTrue(next.waitForExistence(timeout: 5))
+        #if targetEnvironment(macCatalyst)
+        app.activate()
+        next.click()
+        #else
+        next.tap()
         #endif
+    }
+
+    private var firstStoryRow: XCUIElement {
+        #if targetEnvironment(macCatalyst)
+        let identifier = "desktop.story.row.1"
+        #else
+        let identifier = UIDevice.current.userInterfaceIdiom == .pad
+            ? "desktop.story.row.1"
+            : "story.row.1"
+        #endif
+        return app.descendants(matching: .any)[identifier].firstMatch
     }
 
     func testStandardFeedDetailBookmarkAndComments() {
