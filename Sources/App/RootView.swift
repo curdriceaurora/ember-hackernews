@@ -73,19 +73,15 @@ struct MobileRootView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             FeedView(service: service)
-                .accessibilityIdentifier("tab.stories")
                 .tabItem { Label("Stories", systemImage: "flame.fill") }
                 .tag(Tab.stories)
             SearchView(service: service)
-                .accessibilityIdentifier("tab.search")
                 .tabItem { Label("Search", systemImage: "magnifyingglass") }
                 .tag(Tab.search)
             SavedView(service: service)
-                .accessibilityIdentifier("tab.saved")
                 .tabItem { Label("Saved", systemImage: "bookmark.fill") }
                 .tag(Tab.saved)
             SettingsView(cache: cache)
-                .accessibilityIdentifier("tab.settings")
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
                 .tag(Tab.settings)
         }

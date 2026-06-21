@@ -40,6 +40,7 @@ struct CommentRow: View {
         .padding(.horizontal, Spacing.l)
         .contentShape(Rectangle())
         .background(Theme.background)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("comment.row.\(comment.id)")
     }
 

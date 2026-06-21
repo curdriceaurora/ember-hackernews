@@ -5,6 +5,7 @@ final class EmberUITests: XCTestCase {
     private var namespace: String!
 
     override func setUp() {
+        super.setUp()
         continueAfterFailure = false
         namespace = UUID().uuidString
     }
@@ -12,6 +13,7 @@ final class EmberUITests: XCTestCase {
     override func tearDown() {
         app?.terminate()
         app = nil
+        super.tearDown()
     }
 
     private func launch(
@@ -88,10 +90,14 @@ final class EmberUITests: XCTestCase {
         XCTAssertTrue(comment.waitForExistence(timeout: 5))
         let reply = app.descendants(matching: .any)["comment.row.1011"]
         XCTAssertTrue(reply.exists)
-        let toggle = app.buttons["Collapse thread"].firstMatch
+        // The parent row's .accessibilityIdentifier bleeds into child elements,
+        // overriding comment.toggle.101. Use the explicit accessibilityLabel
+        // ("Collapse thread") set in CommentRow — it is stable and intentional.
+        let toggle = comment.buttons["Collapse thread"].firstMatch
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
-        app.activate()
         toggle.tap()
+        // After collapse, reply 1011 should leave the visible tree.
+        XCTAssertTrue(reply.waitForNonExistence(timeout: 2))
     }
 
     func testEmptyAndFailureScenariosRenderDeterministically() {
